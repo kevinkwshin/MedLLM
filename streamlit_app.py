@@ -186,7 +186,7 @@ class SimplifiedMedicalQA:
             return None
     
     def evaluate_qa_simple(self, model_name, questions, correct_answers, progress_callback=None):
-        """간소화된 QA 평가"""
+        """간소화된 QA 평가 (강화된 답변 추출)"""
         results = []
         total_questions = len(questions)
         
@@ -199,10 +199,11 @@ class SimplifiedMedicalQA:
             if progress_callback:
                 progress_callback(i + 1, total_questions)
             
-            # 간단한 프롬프트 (질문에 이미 선택지가 포함됨)
+            # 더 명확한 프롬프트
             prompt = f"""{question}
 
-정답을 A, B, C, D 중 하나로만 답하세요.
+위 의료 문제의 정답을 A, B, C, D 중 하나로만 답하세요.
+
 정답: """
             
             # API 호출
@@ -220,36 +221,86 @@ class SimplifiedMedicalQA:
                     generated_text = response[0]['generated_text'].strip()
                     raw_response_text = generated_text
                     
-                    # 답변 추출 패턴 (더 간단하고 확실한 패턴들)
+                    # 디버깅을 위해 원본 응답을 로그에 출력
+                    print(f"Question {i+1} raw response: '{generated_text}'")
+                    
+                    # 매우 강화된 답변 추출 패턴들
                     patterns = [
-                        r'^([ABCD])[\.\)\s]',      # 첫 글자가 A, B, C, D
-                        r'정답[\s:]*([ABCD])',     # 정답: A
-                        r'답[\s:]*([ABCD])',       # 답: B  
-                        r'([ABCD])[\s]*번',        # A번
-                        r'선택[\s:]*([ABCD])',     # 선택: C
-                        r'\b([ABCD])\b'            # 단독 A, B, C, D
+                        # 가장 명확한 패턴들부터
+                        r'정답[\s:：]*([ABCD])',
+                        r'답[\s:：]*([ABCD])',
+                        r'([ABCD])[\s]*번',
+                        r'([ABCD])[\s]*[이가]\s*정답',
+                        r'([ABCD])[\s]*[이가]\s*맞',
+                        r'선택[\s:：]*([ABCD])',
+                        r'답안[\s:：]*([ABCD])',
+                        r'해답[\s:：]*([ABCD])',
+                        
+                        # 시작 부분 패턴
+                        r'^([ABCD])[\.\)：:\s]',
+                        r'^정답\s*([ABCD])',
+                        r'^답\s*([ABCD])',
+                        
+                        # 문장 중간 패턴
+                        r'따라서\s*([ABCD])',
+                        r'그러므로\s*([ABCD])',
+                        r'결론적으로\s*([ABCD])',
+                        r'답은\s*([ABCD])',
+                        r'정답은\s*([ABCD])',
+                        
+                        # 괄호 패턴
+                        r'\(([ABCD])\)',
+                        r'\[([ABCD])\]',
+                        
+                        # 마지막 수단: 단독 A,B,C,D
+                        r'\b([ABCD])\b'
                     ]
                     
                     for pattern in patterns:
-                        match = re.search(pattern, generated_text, re.IGNORECASE)
-                        if match:
-                            predicted_answer = match.group(1).upper()
+                        matches = re.findall(pattern, generated_text, re.IGNORECASE | re.MULTILINE)
+                        if matches:
+                            predicted_answer = matches[0].upper()
+                            print(f"Pattern matched: '{pattern}' -> '{predicted_answer}'")
                             break
                     
-                    # 마지막 시도: 전체 텍스트에서 A,B,C,D 중 첫 번째 찾기
+                    # 여전히 찾지 못했다면 전체 텍스트에서 A,B,C,D 순서대로 검색
                     if predicted_answer == "No answer":
-                        abcd_matches = re.findall(r'[ABCD]', generated_text.upper())
-                        if abcd_matches:
-                            predicted_answer = abcd_matches[0]
+                        text_upper = generated_text.upper()
+                        for letter in ['A', 'B', 'C', 'D']:
+                            if letter in text_upper:
+                                predicted_answer = letter
+                                print(f"Found letter '{letter}' in text")
+                                break
+                    
+                    # 최후의 수단: 숫자를 문자로 변환 (1->A, 2->B, 3->C, 4->D)
+                    if predicted_answer == "No answer":
+                        number_to_letter = {'1': 'A', '2': 'B', '3': 'C', '4': 'D'}
+                        for num, letter in number_to_letter.items():
+                            if num in generated_text:
+                                predicted_answer = letter
+                                print(f"Converted number '{num}' to letter '{letter}'")
+                                break
+                    
+                    if predicted_answer == "No answer":
+                        print(f"Could not extract answer from: '{generated_text[:100]}...'")
+                
+                elif 'label' in response[0]:
+                    predicted_answer = response[0]['label']
+            
+            is_correct = predicted_answer == correct_answer
             
             results.append({
                 'question': question,
                 'correct_answer': correct_answer,
                 'predicted_answer': predicted_answer,
-                'correct': predicted_answer == correct_answer,
+                'correct': is_correct,
                 'raw_response': raw_response_text,
                 'error': error_msg
             })
+            
+            # 결과 출력 (디버깅용)
+            status = "✅" if is_correct else "❌"
+            print(f"{status} Question {i+1}: Predicted '{predicted_answer}', Correct '{correct_answer}'")
             
             # API 제한 고려
             time.sleep(3)
@@ -619,14 +670,27 @@ with col2:
                         overall_progress = (model_idx + current/total) / total_models
                         progress_bar.progress(overall_progress)
                         status_text.text(f"📝 문제 {current}/{total} 처리 중...")
+                        
+                        # 실시간 답변 추출 상황 표시
+                        if current > 1:  # 이전 문제 결과 표시
+                            prev_idx = current - 2
+                            if prev_idx < len(results):
+                                prev_result = results[prev_idx]
+                                if prev_result['correct']:
+                                    current_model_info.success(f"✅ 문제 {current-1}: {prev_result['predicted_answer']} (정답: {prev_result['correct_answer']})")
+                                else:
+                                    current_model_info.error(f"❌ 문제 {current-1}: {prev_result['predicted_answer']} (정답: {prev_result['correct_answer']})")
                     
                     # 평가 실행
-                    results = evaluator.evaluate_qa_simple(
-                        model['id'],
-                        questions,
-                        correct_answers,
-                        progress_callback
-                    )
+                    with st.expander(f"🔍 {model['name']} 실시간 로그", expanded=True):
+                        log_container = st.empty()
+                        
+                        results = evaluator.evaluate_qa_simple(
+                            model['id'],
+                            questions,
+                            correct_answers,
+                            progress_callback
+                        )
                     
                     # 메트릭 계산
                     metrics = evaluator.calculate_metrics(results)
@@ -640,7 +704,49 @@ with col2:
                     else:
                         result_emoji = "💪"
                     
-                    st.success(f"{result_emoji} **{model['name']}** 완료: {accuracy_pct:.1f}% ({metrics['correct_answers']}/{metrics['total_questions']})")
+                    # 상세한 결과 분석 표시
+                    st.subheader("🔍 평가 결과 상세 분석")
+                    
+                    # 오답 분석
+                    wrong_answers = [r for r in results if not r['correct'] and not r.get('error')]
+                    if wrong_answers:
+                        with st.expander(f"❌ 오답 분석 ({len(wrong_answers)}개)", expanded=True):
+                            for idx, result in enumerate(wrong_answers[:5]):  # 최대 5개만 표시
+                                st.write(f"**문제 {idx+1}:**")
+                                st.write(f"질문: {result['question'][:100]}...")
+                                st.write(f"정답: {result['correct_answer']}")
+                                st.write(f"예측: {result['predicted_answer']}")
+                                st.write(f"원본 응답: `{result['raw_response'][:200]}...`")
+                                st.divider()
+                    
+                    # 정답 분석  
+                    correct_answers = [r for r in results if r['correct']]
+                    if correct_answers:
+                        with st.expander(f"✅ 정답 분석 ({len(correct_answers)}개)"):
+                            st.success(f"총 {len(correct_answers)}개 문제를 맞혔습니다!")
+                            if len(correct_answers) > 0:
+                                sample = correct_answers[0]
+                                st.write(f"**예시 정답:**")
+                                st.write(f"정답: {sample['correct_answer']}")
+                                st.write(f"예측: {sample['predicted_answer']}")
+                                st.write(f"원본 응답: `{sample['raw_response'][:200]}...`")
+                    
+                    # API 오류 분석
+                    api_errors = [r for r in results if r.get('error')]
+                    if api_errors:
+                        with st.expander(f"⚠️ API 오류 ({len(api_errors)}개)"):
+                            for idx, result in enumerate(api_errors[:3]):
+                                st.error(f"오류 {idx+1}: {result['error']}")
+                    
+                    st.success(f"✅ **{model['name']}** 평가 완료: {accuracy_pct:.1f}% ({metrics['correct_answers']}/{metrics['total_questions']})")
+                    
+                    # 실시간 답변 추출 테스트 (디버깅 목적)
+                    if len(results) > 0:
+                        sample_result = results[0]
+                        st.info(f"**첫 번째 문제 디버깅:**\n"
+                               f"원본 응답: `{sample_result['raw_response'][:300]}...`\n"
+                               f"추출된 답변: `{sample_result['predicted_answer']}`\n" 
+                               f"정답: `{sample_result['correct_answer']}`")
                     
                     # 결과 저장
                     new_entry = {
