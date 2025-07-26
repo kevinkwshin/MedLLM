@@ -141,7 +141,7 @@ if st.button("🚀 평가 시작"):
     # 입력 값 검증
     if not api_key:
         st.error("❌ HuggingFace API 키를 입력하세요.")
-    elif not model_id:s\
+    elif not model_id:
         st.error("❌ 모델 ID를 입력하세요.")
     elif uploaded_file is None:
         st.error("❌ 데이터셋 파일을 업로드하세요.")
