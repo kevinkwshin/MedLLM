@@ -34,6 +34,15 @@ st.markdown("""
         padding: 1rem;
         margin: 0.5rem 0;
         background: #f8f9fa;
+        color: #333;
+    }
+    .benchmark-card h4 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .benchmark-card p {
+        color: #555;
+        margin: 0.3rem 0;
     }
     .accuracy-high { color: #28a745; font-weight: bold; }
     .accuracy-medium { color: #ffc107; font-weight: bold; }
@@ -99,6 +108,9 @@ if 'benchmark_results' not in st.session_state:
 
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = False
+
+if 'admin_authenticated' not in st.session_state:
+    st.session_state.admin_authenticated = False
 
 # --- HuggingFace OpenAI 호환 API 클래스 ---
 class MedicalEvaluator:
@@ -191,7 +203,30 @@ st.markdown('<div class="main-header"><h1>🏥 MedLLM Benchmark Results</h1></di
 col1, col2, col3 = st.columns([6, 1, 1])
 with col3:
     if st.button("🔧", help="Admin Mode"):
-        st.session_state.admin_mode = not st.session_state.admin_mode
+        if not st.session_state.admin_authenticated:
+            # 비밀번호 입력 모달
+            with st.sidebar:
+                st.header("🔐 Admin Authentication")
+                password = st.text_input("Enter Admin Password:", type="password", key="admin_password")
+                
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    if st.button("Login", key="admin_login"):
+                        if password == "passpass":
+                            st.session_state.admin_authenticated = True
+                            st.session_state.admin_mode = True
+                            st.success("✅ Admin 인증 성공!")
+                            st.rerun()
+                        else:
+                            st.error("❌ 잘못된 비밀번호입니다.")
+                
+                with col_b:
+                    if st.button("Cancel", key="admin_cancel"):
+                        st.session_state.admin_mode = False
+        else:
+            st.session_state.admin_mode = not st.session_state.admin_mode
+            if not st.session_state.admin_mode:
+                st.session_state.admin_authenticated = False
 
 # --- 벤치마크 결과 표시 ---
 st.header("📊 Current Benchmark Rankings")
@@ -226,13 +261,13 @@ for i, result in enumerate(sorted_results):
         """, unsafe_allow_html=True)
     
     with col4:
-        if st.session_state.admin_mode:
+        if st.session_state.admin_mode and st.session_state.admin_authenticated:
             if st.button("🗑️", key=f"delete_{result['id']}", help="Delete"):
                 delete_benchmark_result(result['id'])
                 st.rerun()
 
 # --- 관리자 모드: 새로운 평가 실행 ---
-if st.session_state.admin_mode:
+if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
     st.header("🔧 Admin: Run New Evaluation")
 
