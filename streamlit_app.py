@@ -56,7 +56,7 @@ if 'benchmark_results' not in st.session_state:
     st.session_state.benchmark_results = [
         {
             'id': 1,
-            'model_name': 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
+            'model_name': 'Qwen/Qwen3-32B',
             'accuracy': 87.5,
             'total_questions': 240,
             'correct_answers': 210,
@@ -66,7 +66,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 2,
-            'model_name': 'meta-llama/Llama-3.1-70B-Instruct',
+            'model_name': 'Qwen/Qwen3-1.7B',
             'accuracy': 82.3,
             'total_questions': 240,
             'correct_answers': 197,
@@ -293,7 +293,7 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
         # 여러 모델 입력
         model_ids_input = st.text_area(
             "HuggingFace Model IDs (한 줄에 하나씩)", 
-            value="Qwen/Qwen3-Coder-480B-A35B-Instruct:novita\nmeta-llama/Llama-3.1-70B-Instruct",
+            value="Qwen/Qwen3-32BQwen/Qwen3-1.7B/Llama-3.1-7B-Instruct",
             help="평가할 모델들을 한 줄에 하나씩 입력하세요.",
             height=150
         )
