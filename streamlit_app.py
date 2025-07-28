@@ -203,30 +203,38 @@ st.markdown('<div class="main-header"><h1>🏥 MedLLM Benchmark Results</h1></di
 col1, col2, col3 = st.columns([6, 1, 1])
 with col3:
     if st.button("🔧", help="Admin Mode"):
-        if not st.session_state.admin_authenticated:
-            # 비밀번호 입력 모달
-            with st.sidebar:
-                st.header("🔐 Admin Authentication")
-                password = st.text_input("Enter Admin Password:", type="password", key="admin_password")
-                
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    if st.button("Login", key="admin_login"):
-                        if password == "passpass":
-                            st.session_state.admin_authenticated = True
-                            st.session_state.admin_mode = True
-                            st.success("✅ Admin 인증 성공!")
-                            st.rerun()
-                        else:
-                            st.error("❌ 잘못된 비밀번호입니다.")
-                
-                with col_b:
-                    if st.button("Cancel", key="admin_cancel"):
-                        st.session_state.admin_mode = False
-        else:
+        if st.session_state.admin_authenticated:
+            # 이미 인증된 경우 모드 토글
             st.session_state.admin_mode = not st.session_state.admin_mode
             if not st.session_state.admin_mode:
                 st.session_state.admin_authenticated = False
+        else:
+            # 인증이 필요한 경우
+            st.session_state.admin_mode = True
+
+# --- 관리자 인증 섹션 ---
+if st.session_state.admin_mode and not st.session_state.admin_authenticated:
+    st.markdown("---")
+    st.header("🔐 Admin Authentication Required")
+    
+    col_auth1, col_auth2, col_auth3 = st.columns([1, 2, 1])
+    with col_auth2:
+        password = st.text_input("Enter Admin Password:", type="password", key="admin_password")
+        
+        col_login, col_cancel = st.columns(2)
+        with col_login:
+            if st.button("🔑 Login", key="admin_login", use_container_width=True):
+                if password == "passpass":
+                    st.session_state.admin_authenticated = True
+                    st.success("✅ Admin 인증 성공!")
+                    st.rerun()
+                else:
+                    st.error("❌ 잘못된 비밀번호입니다.")
+        
+        with col_cancel:
+            if st.button("❌ Cancel", key="admin_cancel", use_container_width=True):
+                st.session_state.admin_mode = False
+                st.rerun()
 
 # --- 벤치마크 결과 표시 ---
 st.header("📊 Current Benchmark Rankings")
