@@ -516,10 +516,15 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             st.session_state.test_dataset = None
             st.rerun()
     else:
-        st.warning("⚠️ 테스트 데이터셋이 없습니다.")
-        uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
-        password = st.text_input("파일 암호 (선택사항)", type="password")
-        
+        # st.warning("⚠️ 테스트 데이터셋이 없습니다.")
+        st.markdown('<p style="color: #333333; background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107;">⚠️ 테스트 데이터셋이 없습니다.</p>', unsafe_allow_html=True)
+        # uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
+        st.markdown('<label style="color: #333333; font-weight: 500;">📁 데이터셋 업로드</label>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("", type=['csv', 'xlsx'], label_visibility="collapsed")
+        # password = st.text_input("파일 암호 (선택사항)", type="password")
+        st.markdown('<label style="color: #333333; font-weight: 500;">🔒 파일 암호 (선택사항)</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", label_visibility="collapsed")
+
         if st.button("📁 Load Dataset") and uploaded_file:
             success, message = load_secure_dataset(uploaded_file, password if password else None)
             if success:
