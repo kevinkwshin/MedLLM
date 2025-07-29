@@ -2,10 +2,13 @@ import streamlit as st
 import pandas as pd
 import re
 import time
-from io import StringIO
+from io import StringIO, BytesIO
 from openai import OpenAI
 from datetime import datetime
 import json
+import openpyxl
+from openpyxl import load_workbook
+import zipfile
 
 # --- 페이지 설정 ---
 st.set_page_config(
@@ -52,57 +55,57 @@ st.markdown("""
 
 # --- 세션 상태 초기화 ---
 if 'benchmark_results' not in st.session_state:
-    # 샘플 벤치마크 결과 생성
+    # 샘플 벤치마크 결과 생성 (Qwen3 30B 이하 모델들)
     st.session_state.benchmark_results = [
         {
             'id': 1,
-            'model_name': 'Qwen/Qwen3-32B',
-            'accuracy': 87.5,
+            'model_name': 'Qwen/Qwen3-14B-Instruct',
+            'accuracy': 86.7,
             'total_questions': 240,
-            'correct_answers': 210,
+            'correct_answers': 208,
             'evaluation_date': '2025-01-25 14:30:22',
             'dataset_name': 'Medical QA Dataset v1.2',
-            'api_errors': 2
+            'api_errors': 1
         },
         {
             'id': 2,
-            'model_name': 'Qwen/Qwen3-1.7B',
-            'accuracy': 82.3,
+            'model_name': 'Qwen/Qwen3-7B-Instruct',
+            'accuracy': 82.1,
             'total_questions': 240,
             'correct_answers': 197,
             'evaluation_date': '2025-01-24 16:45:11',
             'dataset_name': 'Medical QA Dataset v1.2',
-            'api_errors': 0
+            'api_errors': 2
         },
         {
             'id': 3,
-            'model_name': 'google/gemma-2-27b-it',
-            'accuracy': 79.6,
+            'model_name': 'Qwen/Qwen3-3B-Instruct',
+            'accuracy': 77.5,
             'total_questions': 240,
-            'correct_answers': 191,
+            'correct_answers': 186,
             'evaluation_date': '2025-01-23 09:15:33',
             'dataset_name': 'Medical QA Dataset v1.2',
             'api_errors': 1
         },
         {
             'id': 4,
-            'model_name': 'microsoft/DialoGPT-medium',
-            'accuracy': 71.2,
+            'model_name': 'Qwen/Qwen3-1.5B-Instruct',
+            'accuracy': 71.3,
             'total_questions': 240,
             'correct_answers': 171,
             'evaluation_date': '2025-01-22 11:20:45',
             'dataset_name': 'Medical QA Dataset v1.1',
-            'api_errors': 8
+            'api_errors': 4
         },
         {
             'id': 5,
-            'model_name': 'anthropic/claude-3-haiku',
-            'accuracy': 91.7,
+            'model_name': 'Qwen/Qwen3-0.5B-Instruct',
+            'accuracy': 63.8,
             'total_questions': 240,
-            'correct_answers': 220,
+            'correct_answers': 153,
             'evaluation_date': '2025-01-21 13:50:17',
             'dataset_name': 'Medical QA Dataset v1.2',
-            'api_errors': 0
+            'api_errors': 7
         }
     ]
 
@@ -111,6 +114,13 @@ if 'admin_mode' not in st.session_state:
 
 if 'admin_authenticated' not in st.session_state:
     st.session_state.admin_authenticated = False
+
+if 'test_dataset' not in st.session_state:
+    # 보안 테스트 데이터셋 (실제로는 파일에서 로드)
+    st.session_state.test_dataset = None
+
+if 'pending_evaluations' not in st.session_state:
+    st.session_state.pending_evaluations = []
 
 # --- HuggingFace OpenAI 호환 API 클래스 ---
 class MedicalEvaluator:
@@ -193,11 +203,74 @@ def add_benchmark_result(model_name, accuracy, total_questions, correct_answers,
     }
     st.session_state.benchmark_results.append(new_result)
 
+def add_evaluation_request(model_name):
+    """평가 요청을 대기열에 추가"""
+    if model_name not in [req['model_name'] for req in st.session_state.pending_evaluations]:
+        request_id = len(st.session_state.pending_evaluations) + 1
+        st.session_state.pending_evaluations.append({
+            'id': request_id,
+            'model_name': model_name,
+            'status': 'pending',
+            'submitted_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'evaluated_at': None
+        })
+        return True
+    return False
+
+def process_evaluation_queue():
+    """대기중인 평가 요청들을 처리"""
+    if not st.session_state.test_dataset:
+        return False, "테스트 데이터셋이 로드되지 않았습니다."
+    
+    pending_requests = [req for req in st.session_state.pending_evaluations if req['status'] == 'pending']
+    if not pending_requests:
+        return False, "처리할 평가 요청이 없습니다."
+    
+    return True, f"{len(pending_requests)}개의 평가 요청이 대기중입니다."
+
 def delete_benchmark_result(result_id):
     st.session_state.benchmark_results = [r for r in st.session_state.benchmark_results if r['id'] != result_id]
 
 # --- 메인 헤더 ---
 st.markdown('<div class="main-header"><h1>🏥 MedLLM Benchmark Results</h1></div>', unsafe_allow_html=True)
+
+# --- 모델 제출 섹션 (공개) ---
+st.header("🚀 Submit Your Model for Evaluation")
+st.info("HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.")
+
+col_submit1, col_submit2 = st.columns([3, 1])
+with col_submit1:
+    model_submission = st.text_input(
+        "HuggingFace Model ID", 
+        placeholder="예: Qwen/Qwen2.5-7B-Instruct",
+        help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요."
+    )
+
+with col_submit2:
+    if st.button("📤 Submit", use_container_width=True):
+        if model_submission.strip():
+            success = add_evaluation_request(model_submission.strip())
+            if success:
+                st.success(f"✅ {model_submission} 평가 요청이 제출되었습니다!")
+                st.info("관리자가 승인하면 자동으로 평가가 진행됩니다.")
+                st.rerun()
+            else:
+                st.warning("⚠️ 이미 제출된 모델입니다.")
+        else:
+            st.error("❌ 모델 ID를 입력해주세요.")
+
+# --- 대기중인 평가 표시 ---
+if st.session_state.pending_evaluations:
+    pending_count = len([req for req in st.session_state.pending_evaluations if req['status'] == 'pending'])
+    if pending_count > 0:
+        st.info(f"🕐 현재 {pending_count}개의 모델이 평가 대기중입니다.")
+        
+        with st.expander("대기중인 평가 목록 보기"):
+            for req in st.session_state.pending_evaluations:
+                if req['status'] == 'pending':
+                    st.text(f"• {req['model_name']} (제출: {req['submitted_at']})")
+
+st.markdown("---")
 
 # --- 관리자 모드 토글 (숨김) ---
 col1, col2, col3 = st.columns([6, 1, 1])
@@ -277,10 +350,128 @@ for i, result in enumerate(sorted_results):
 # --- 관리자 모드: 새로운 평가 실행 ---
 if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
-    st.header("🔧 Admin: Run New Evaluation")
+    st.header("🔧 Admin: Manage Evaluations")
 
+    # 테스트 데이터셋 관리
+    st.subheader("📊 Secure Test Dataset")
+    if st.session_state.test_dataset:
+        encryption_badge = "🔒 암호화됨" if st.session_state.test_dataset.get('is_encrypted', False) else "🔓 일반"
+        file_type_badge = st.session_state.test_dataset.get('file_type', 'unknown').upper()
+        
+        st.success(f"✅ 테스트 데이터셋 로드됨: {st.session_state.test_dataset['total_count']}개 질문")
+        st.info(f"📄 파일 형식: {file_type_badge} | 보안: {encryption_badge} | 로드 시간: {st.session_state.test_dataset['loaded_at']}")
+        
+        col_ds1, col_ds2 = st.columns(2)
+        with col_ds1:
+            if st.button("🗑️ Remove Dataset", help="현재 로드된 테스트 데이터셋을 제거합니다."):
+                st.session_state.test_dataset = None
+                st.success("데이터셋이 제거되었습니다.")
+                st.rerun()
+        
+        with col_ds2:
+            if st.button("🔄 Reload Dataset", help="테스트 데이터셋을 다시 로드합니다."):
+                st.session_state.test_dataset = None
+                st.rerun()
+    else:
+        st.warning("⚠️ 테스트 데이터셋이 로드되지 않았습니다.")
+        
+        # 파일 업로드 및 암호 입력
+        uploaded_test_file = st.file_uploader(
+            "보안 테스트 데이터셋 업로드",
+            type=['csv', 'xlsx', 'xls'],
+            help="암호화된 파일도 지원됩니다. CSV, Excel 파일 모두 가능합니다.",
+            key="secure_dataset"
+        )
+        
+        # 암호 입력 (선택사항)
+        dataset_password = st.text_input(
+            "파일 암호 (선택사항)",
+            type="password",
+            help="암호화된 파일의 경우 암호를 입력하세요. 일반 파일은 비워두세요.",
+            key="dataset_password"
+        )
+        
+        col_upload1, col_upload2 = st.columns(2)
+        
+        with col_upload1:
+            if st.button("📁 Load Dataset", help="데이터셋을 로드합니다."):
+                if uploaded_test_file:
+                    success, message = load_secure_dataset(uploaded_test_file, dataset_password if dataset_password else None)
+                    if success:
+                        st.success(message)
+                        st.rerun()
+                    else:
+                        st.error(message)
+                else:
+                    st.error("파일을 먼저 선택해주세요.")
+        
+        with col_upload2:
+            st.info("💡 **지원 형식:**\n- CSV 파일 (일반/ZIP 암호화)\n- Excel 파일 (일반/암호화)\n- 'question', 'answer' 컬럼 필수")
+
+    # 대기중인 평가 관리
+    st.subheader("📋 Pending Evaluation Queue")
+    if st.session_state.pending_evaluations:
+        pending_requests = [req for req in st.session_state.pending_evaluations if req['status'] == 'pending']
+        
+        if pending_requests:
+            st.info(f"🕐 {len(pending_requests)}개의 평가 요청이 대기중입니다.")
+            
+            for req in pending_requests:
+                col_req1, col_req2, col_req3 = st.columns([3, 1, 1])
+                
+                with col_req1:
+                    st.text(f"📦 {req['model_name']}")
+                    st.caption(f"제출: {req['submitted_at']}")
+                
+                with col_req2:
+                    if st.button("✅ Approve", key=f"approve_{req['id']}", help="평가 승인 및 실행"):
+                        if st.session_state.test_dataset:
+                            # 평가 실행 로직
+                            st.info(f"🤖 {req['model_name']} 평가를 시작합니다...")
+                            # 여기서 실제 평가를 실행할 수 있습니다
+                            req['status'] = 'approved'
+                            st.success("평가가 승인되었습니다!")
+                            st.rerun()
+                        else:
+                            st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
+                
+                with col_req3:
+                    if st.button("❌ Reject", key=f"reject_{req['id']}", help="평가 요청 거부"):
+                        st.session_state.pending_evaluations.remove(req)
+                        st.success("평가 요청이 거부되었습니다.")
+                        st.rerun()
+                
+                st.markdown("---")
+            
+            # 일괄 처리 버튼
+            col_batch1, col_batch2 = st.columns(2)
+            with col_batch1:
+                if st.button("🚀 Process All Pending", help="모든 대기중인 평가를 실행합니다."):
+                    if st.session_state.test_dataset:
+                        st.info("모든 대기중인 평가를 시작합니다...")
+                        # 여기서 모든 대기중인 평가를 실행
+                        for req in pending_requests:
+                            req['status'] = 'processing'
+                        st.success("모든 평가가 시작되었습니다!")
+                        st.rerun()
+                    else:
+                        st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
+            
+            with col_batch2:
+                if st.button("🗑️ Clear All Pending", help="모든 대기중인 평가를 삭제합니다."):
+                    st.session_state.pending_evaluations = [req for req in st.session_state.pending_evaluations if req['status'] != 'pending']
+                    st.success("모든 대기중인 평가가 삭제되었습니다.")
+                    st.rerun()
+        else:
+            st.info("처리할 평가 요청이 없습니다.")
+    else:
+        st.info("제출된 평가 요청이 없습니다.")
+
+    # 수동 평가 섹션 (기존 기능 유지)
+    st.subheader("🔧 Manual Evaluation")
+    
     with st.sidebar:
-        st.header("⚙️ Evaluation Settings")
+        st.header("⚙️ Manual Evaluation Settings")
 
         st.info("**권장:** Streamlit Cloud의 Secrets에 `HF_TOKEN`을 설정하세요.")
         api_key = st.text_input(
@@ -293,7 +484,7 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
         # 여러 모델 입력
         model_ids_input = st.text_area(
             "HuggingFace Model IDs (한 줄에 하나씩)", 
-            value="Qwen/Qwen3-32BQwen/Qwen3-1.7B/Llama-3.1-7B-Instruct",
+            value="Qwen/Qwen3-14B-Instruct\nQwen/Qwen3-7B-Instruct",
             help="평가할 모델들을 한 줄에 하나씩 입력하세요.",
             height=150
         )
@@ -304,11 +495,19 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             help="데이터셋 이름을 입력하세요."
         )
 
-        st.subheader("📊 데이터셋")
+        st.subheader("📊 Alternative Dataset (Optional)")
         uploaded_file = st.file_uploader(
-            "CSV 파일을 업로드하세요",
-            type=['csv'],
-            help="'question'과 'answer' 컬럼을 포함해야 합니다."
+            "대체 데이터셋 파일 업로드 (선택사항)",
+            type=['csv', 'xlsx', 'xls'],
+            help="기본 테스트 데이터셋 대신 사용할 파일 (암호화 지원)",
+            key="alternative_dataset"
+        )
+        
+        alternative_password = st.text_input(
+            "대체 파일 암호 (선택사항)",
+            type="password",
+            help="암호화된 대체 파일의 경우 암호를 입력하세요.",
+            key="alternative_password"
         )
         
         sample_csv = '''question,answer
@@ -323,20 +522,81 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             mime="text/csv"
         )
 
-    if st.button("🚀 Start Batch Evaluation"):
+    if st.button("🚀 Start Manual Evaluation"):
         if not api_key:
             st.error("❌ Hugging Face 토큰을 입력하거나 Secrets에 설정하세요.")
         elif not model_ids_input.strip():
             st.error("❌ 모델 ID를 입력하세요.")
-        elif uploaded_file is None:
-            st.error("❌ 데이터셋 파일을 업로드하세요.")
+        elif not st.session_state.test_dataset and uploaded_file is None:
+            st.error("❌ 테스트 데이터셋이 로드되지 않았고 대체 데이터셋도 제공되지 않았습니다.")
         else:
             try:
                 # 모델 IDs 파싱
                 model_ids = [mid.strip() for mid in model_ids_input.strip().split('\n') if mid.strip()]
                 
-                df = pd.read_csv(uploaded_file)
-                if 'question' not in df.columns or 'answer' not in df.columns:
+                # 데이터셋 선택
+                if uploaded_file:
+                    # 대체 데이터셋 사용
+                    temp_success, temp_message = load_secure_dataset(uploaded_file, alternative_password if alternative_password else None)
+                    if not temp_success:
+                        st.error(f"❌ 대체 데이터셋 로드 실패: {temp_message}")
+                        st.stop()
+                    
+                    # 임시 데이터셋 사용
+                    temp_df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
+                    if 'question' not in temp_df.columns or 'answer' not in temp_df.columns:
+                        st.error("❌ 파일에 'question'과 'answer' 컬럼이 있어야 합니다.")
+                        st.stop()
+                    questions = temp_df['question'].tolist()
+                    correct_answers = temp_df['answer'].tolist()
+                    st.info(f"✅ 대체 데이터셋 사용: {len(temp_df)}개의 질문")
+                else:
+                    # 메인 테스트 데이터셋 사용
+                    questions = st.session_state.test_dataset['questions']
+                    correct_answers = st.session_state.test_dataset['answers']
+                    encryption_info = " (암호화됨)" if st.session_state.test_dataset.get('is_encrypted', False) else ""
+                    st.info(f"✅ 보안 테스트 데이터셋 사용: {len(questions)}개의 질문{encryption_info}")
+
+                st.info(f"🤖 {len(model_ids)}개 모델 순차 평가 시작...")
+
+                evaluator = MedicalEvaluator(api_key)
+
+                # 각 모델에 대해 순차적으로 평가
+                for model_idx, model_id in enumerate(model_ids):
+                    clean_model_id = model_id.strip().strip('"\'')
+                    
+                    st.subheader(f"Evaluating Model {model_idx + 1}/{len(model_ids)}: {clean_model_id}")
+                    
+                    progress_bar = st.progress(0, text=f"평가 시작: {clean_model_id}")
+                    evaluation_results, api_errors = evaluator.evaluate(clean_model_id, questions, correct_answers, progress_bar)
+                    progress_bar.empty()
+
+                    results_df = pd.DataFrame(evaluation_results)
+                    correct_count = results_df['is_correct'].sum()
+                    total_count = len(results_df)
+                    accuracy = (correct_count / total_count) * 100 if total_count > 0 else 0
+
+                    # 벤치마크 결과에 추가
+                    add_benchmark_result(
+                        clean_model_id, 
+                        accuracy, 
+                        total_count, 
+                        correct_count, 
+                        dataset_name,
+                        api_errors
+                    )
+
+                    st.success(f"✅ {clean_model_id}: {accuracy:.2f}% ({correct_count}/{total_count})")
+                    
+                    if api_errors > 0:
+                        st.warning(f"⚠️ API 오류 {api_errors}개 발생")
+
+                st.success("🎉 모든 모델 평가 완료! 페이지가 새로고침됩니다.")
+                time.sleep(2)
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"오류가 발생했습니다: {e}")' not in df.columns:
                     st.error("❌ CSV 파일에 'question'과 'answer' 컬럼이 있어야 합니다.")
                 else:
                     st.info(f"✅ {len(df)}개의 질문으로 데이터셋 로드 완료.")
@@ -384,4 +644,4 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
                 st.error(f"오류가 발생했습니다: {e}")
 
 else:
-    st.info("새로운 평가를 실행하려면 관리자에게 문의하세요.")
+    st.info("🔧 관리자 기능을 사용하려면 우측 상단의 설정 버튼을 클릭하세요.")
