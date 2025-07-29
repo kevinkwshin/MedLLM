@@ -92,10 +92,16 @@ st.markdown("""
         flex: 1;
     }
     
-    .model-name {
+    .model-name a {
+        color: #1a73e8;
+        text-decoration: none;
         font-weight: 600;
-        color: #202124;
-        margin-bottom: 0.25rem;
+        transition: color 0.2s ease;
+    }
+    
+    .model-name a:hover {
+        color: #1557b0;
+        text-decoration: underline;
     }
     
     .model-details {
@@ -468,10 +474,15 @@ for i, result in enumerate(sorted_results):
         st.markdown(f'<div class="rank-badge">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
+        huggingface_url = f"https://huggingface.co/{result['model_name']}"
         st.markdown(f"""
         <div class="benchmark-item">
             <div class="model-info">
-                <div class="model-name">{result['model_name']}</div>
+                <div class="model-name">
+                    <a href="{huggingface_url}" target="_blank" style="color: #1a73e8; text-decoration: none;">
+                        🤖 {result['model_name']}
+                    </a>
+                </div>
                 <div class="model-details">
                     {result['dataset_name']} • {result['evaluation_date']}
                 </div>
