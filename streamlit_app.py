@@ -20,34 +20,175 @@ st.markdown("""
 <style>
     .main-header {
         text-align: center;
-        padding: 2rem 0;
+        padding: 2.5rem 0;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
     }
+    .main-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    /* 제출 섹션 스타일링 */
+    .submit-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #dee2e6;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    
+    .submit-header {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .submit-info {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+        font-size: 1rem;
+    }
+    
+    /* 입력 필드와 버튼 정렬 */
+    .input-container {
+        display: flex;
+        gap: 1rem;
+        align-items: end;
+    }
+    
+    .input-field {
+        flex: 1;
+    }
+    
+    .submit-button {
+        flex-shrink: 0;
+    }
+    
+    /* 버튼 스타일 개선 */
     .stButton>button {
-        width: 100%;
-    }
-    .benchmark-card {
-        border: 1px solid #ddd;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border: none;
         border-radius: 10px;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        background: #f8f9fa;
-        color: #333;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        height: 56px;
     }
+    
+    .stButton>button:hover {
+        background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    /* 관리자 버튼 스타일 */
+    .admin-button button {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    /* 벤치마크 카드 개선 */
+    .benchmark-card {
+        border: none;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        color: #333;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .benchmark-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    
     .benchmark-card h4 {
         color: #2c3e50;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.8rem;
+        font-weight: 600;
+        font-size: 1.1rem;
     }
+    
     .benchmark-card p {
-        color: #555;
-        margin: 0.3rem 0;
+        color: #6c757d;
+        margin: 0.4rem 0;
+        font-size: 0.9rem;
     }
-    .accuracy-high { color: #28a745; font-weight: bold; }
-    .accuracy-medium { color: #ffc107; font-weight: bold; }
-    .accuracy-low { color: #dc3545; font-weight: bold; }
+    
+    .benchmark-rank {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+    
+    .accuracy-score {
+        text-align: center;
+        padding: 1rem;
+        background: rgba(255,255,255,0.8);
+        border-radius: 12px;
+        border: 2px solid #e9ecef;
+    }
+    
+    .accuracy-high { 
+        color: #28a745; 
+        font-weight: 700;
+        font-size: 2rem;
+    }
+    .accuracy-medium { 
+        color: #ffc107; 
+        font-weight: 700;
+        font-size: 2rem;
+    }
+    .accuracy-low { 
+        color: #dc3545; 
+        font-weight: 700;
+        font-size: 2rem;
+    }
+    
+    /* 대기열 정보 스타일 */
+    .queue-info {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        padding: 1rem;
+        border-radius: 10px;
+        border-left: 4px solid #2196f3;
+        margin: 1rem 0;
+    }
+    
+    /* 섹션 헤더 스타일 */
+    .section-header {
+        color: #2c3e50;
+        font-weight: 600;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #667eea;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -281,47 +422,71 @@ def delete_benchmark_result(result_id):
 st.markdown('<div class="main-header"><h1>🏥 MedLLM Benchmark Results</h1></div>', unsafe_allow_html=True)
 
 # --- 모델 제출 섹션 (공개) ---
-st.header("🚀 Submit Your Model for Evaluation")
-st.info("HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.")
+st.markdown("""
+<div class="submit-section">
+    <div class="submit-header">
+        🚀 Submit Your Model for Evaluation
+    </div>
+    <div class="submit-info">
+        HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-col_submit1, col_submit2 = st.columns([3, 1])
-with col_submit1:
+# 입력 필드와 버튼을 같은 높이에 배치
+col_input, col_button = st.columns([4, 1])
+
+with col_input:
     model_submission = st.text_input(
-        "HuggingFace Model ID", 
+        "HuggingFace Model ID",
         placeholder="예: Qwen/Qwen3-7B-Instruct",
-        help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요."
+        help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요.",
+        label_visibility="collapsed"
     )
 
-with col_submit2:
-    if st.button("📤 Submit", use_container_width=True):
-        if model_submission.strip():
-            success = add_evaluation_request(model_submission.strip())
-            if success:
-                st.success(f"✅ {model_submission} 평가 요청이 제출되었습니다!")
-                st.info("관리자가 승인하면 자동으로 평가가 진행됩니다.")
-                st.rerun()
-            else:
-                st.warning("⚠️ 이미 제출된 모델입니다.")
+with col_button:
+    # 빈 공간으로 버튼 위치 맞추기
+    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+    submit_clicked = st.button("📤 Submit", use_container_width=True, type="primary")
+
+# 제출 로직
+if submit_clicked:
+    if model_submission.strip():
+        success = add_evaluation_request(model_submission.strip())
+        if success:
+            st.success(f"✅ {model_submission} 평가 요청이 제출되었습니다!")
+            st.info("관리자가 승인하면 자동으로 평가가 진행됩니다.")
+            st.rerun()
         else:
-            st.error("❌ 모델 ID를 입력해주세요.")
+            st.warning("⚠️ 이미 제출된 모델입니다.")
+    else:
+        st.error("❌ 모델 ID를 입력해주세요.")
 
 # --- 대기중인 평가 표시 ---
 if st.session_state.pending_evaluations:
     pending_count = len([req for req in st.session_state.pending_evaluations if req['status'] == 'pending'])
     if pending_count > 0:
-        st.info(f"🕐 현재 {pending_count}개의 모델이 평가 대기중입니다.")
+        st.markdown(f"""
+        <div class="queue-info">
+            🕐 현재 <strong>{pending_count}개</strong>의 모델이 평가 대기중입니다.
+        </div>
+        """, unsafe_allow_html=True)
         
-        with st.expander("대기중인 평가 목록 보기"):
+        with st.expander("📋 대기중인 평가 목록 보기"):
             for req in st.session_state.pending_evaluations:
                 if req['status'] == 'pending':
-                    st.text(f"• {req['model_name']} (제출: {req['submitted_at']})")
+                    st.markdown(f"• **{req['model_name']}** (제출: {req['submitted_at']})")
 
 st.markdown("---")
 
 # --- 관리자 모드 토글 (숨김) ---
 col1, col2, col3 = st.columns([6, 1, 1])
 with col3:
-    if st.button("🔧", help="Admin Mode"):
+    st.markdown('<div class="admin-button">', unsafe_allow_html=True)
+    admin_clicked = st.button("🔧", help="Admin Mode")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if admin_clicked:
         if st.session_state.admin_authenticated:
             # 이미 인증된 경우 모드 토글
             st.session_state.admin_mode = not st.session_state.admin_mode
@@ -356,7 +521,7 @@ if st.session_state.admin_mode and not st.session_state.admin_authenticated:
                 st.rerun()
 
 # --- 벤치마크 결과 표시 ---
-st.header("📊 Current Benchmark Rankings")
+st.markdown('<h2 class="section-header">📊 Current Benchmark Rankings</h2>', unsafe_allow_html=True)
 
 # 정확도 순으로 정렬
 sorted_results = sorted(st.session_state.benchmark_results, key=lambda x: x['accuracy'], reverse=True)
@@ -367,29 +532,32 @@ for i, result in enumerate(sorted_results):
     col1, col2, col3, col4 = st.columns([1, 4, 2, 1])
     
     with col1:
-        st.markdown(f"<h2>#{i+1}</h2>", unsafe_allow_html=True)
+        st.markdown(f'<div class="benchmark-rank">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
+        api_error_info = f"<p><strong>⚠️ API Errors:</strong> {result['api_errors']}</p>" if result['api_errors'] > 0 else ""
         st.markdown(f"""
         <div class="benchmark-card">
-            <h4>{result['model_name']}</h4>
-            <p><strong>Dataset:</strong> {result['dataset_name']}</p>
-            <p><strong>Date:</strong> {result['evaluation_date']}</p>
-            {f"<p><strong>API Errors:</strong> {result['api_errors']}</p>" if result['api_errors'] > 0 else ""}
+            <h4>🤖 {result['model_name']}</h4>
+            <p><strong>📊 Dataset:</strong> {result['dataset_name']}</p>
+            <p><strong>📅 Date:</strong> {result['evaluation_date']}</p>
+            {api_error_info}
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
-        <div style="text-align: center;">
-            <h2 class="{accuracy_class}">{result['accuracy']:.1f}%</h2>
-            <p>{result['correct_answers']} / {result['total_questions']}</p>
+        <div class="accuracy-score">
+            <div class="{accuracy_class}">{result['accuracy']:.1f}%</div>
+            <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;">
+                {result['correct_answers']} / {result['total_questions']} 정답
+            </p>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
         if st.session_state.admin_mode and st.session_state.admin_authenticated:
-            if st.button("🗑️", key=f"delete_{result['id']}", help="Delete"):
+            if st.button("🗑️", key=f"delete_{result['id']}", help="Delete Result"):
                 delete_benchmark_result(result['id'])
                 st.rerun()
 
