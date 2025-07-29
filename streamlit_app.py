@@ -100,7 +100,7 @@ st.markdown("""
     
     .model-details {
         font-size: 0.9rem;
-        color: #5f6368;
+        color: #333333;
     }
     
     .accuracy-display {
@@ -123,7 +123,7 @@ st.markdown("""
     
     .accuracy-detail {
         font-size: 0.8rem;
-        color: #5f6368;
+        color: #333333;
     }
     
     /* 관리자 버튼 */
@@ -417,7 +417,7 @@ if st.session_state.admin_mode and not st.session_state.admin_authenticated:
 st.markdown("""
 <div class="submit-box">
     <h3>🚀 Submit Your Model for Evaluation</h3>
-    <p style="color: #5f6368; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
+    <p style="color: #333333; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -468,13 +468,12 @@ for i, result in enumerate(sorted_results):
         st.markdown(f'<div class="rank-badge">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
-        api_error_text = f" • ⚠️ API 오류 {result['api_errors']}개" if result['api_errors'] > 0 else ""
         st.markdown(f"""
         <div class="benchmark-item">
             <div class="model-info">
                 <div class="model-name">{result['model_name']}</div>
                 <div class="model-details">
-                    {result['dataset_name']} • {result['evaluation_date']}{api_error_text}
+                    {result['dataset_name']} • {result['evaluation_date']}
                 </div>
             </div>
         </div>
