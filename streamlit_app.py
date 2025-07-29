@@ -416,7 +416,7 @@ if st.session_state.admin_mode and not st.session_state.admin_authenticated:
 # --- 모델 제출 섹션 ---
 st.markdown("""
 <div class="submit-box">
-    <h3>🚀 Submit Your Model for Evaluation</h3>
+    <h3 style="color: #202124;">🚀 Submit Your Model for Evaluation</h3>
     <p style="color: #333333; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -536,4 +536,4 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
 
 else:
     if not st.session_state.admin_mode:
-        st.info("💡 새로운 평가를 원하시면 관리자에게 문의하세요.")
+        st.markdown('<p style="color: #333333; background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #1a73e8;">💡 새로운 평가를 원하시면 관리자에게 문의하세요.</p>', unsafe_allow_html=True)
