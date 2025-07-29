@@ -432,7 +432,7 @@ col1, col2 = st.columns([4, 1])
 with col1:
     model_input = st.text_input(
         "Model ID",
-        placeholder="예: Qwen/Qwen3-7B-Instruct",
+        placeholder="예: Qwen/Qwen3-30B",
         label_visibility="collapsed"
     )
 with col2:
