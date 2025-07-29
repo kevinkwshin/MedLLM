@@ -15,197 +15,157 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- CSS 스타일링 ---
+# --- 심플한 CSS 스타일링 ---
 st.markdown("""
 <style>
+    /* 전체 배경 밝게 */
+    .main {
+        background-color: #ffffff;
+    }
+    
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    
+    /* 메인 헤더 */
     .main-header {
         text-align: center;
-        padding: 2.5rem 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem 0;
+        background: linear-gradient(90deg, #4285f4 0%, #0f9d58 100%);
         color: white;
-        border-radius: 15px;
+        border-radius: 12px;
         margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-    }
-    .main-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin: 0;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     
-    /* 제출 섹션 스타일링 */
-    .submit-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        border: 1px solid #dee2e6;
+    /* 제출 섹션 */
+    .submit-box {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e1e5e9;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
-    .submit-header {
-        color: #2c3e50;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+    /* 입력과 버튼 같은 높이 */
+    .input-row {
         display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .submit-info {
-        color: #6c757d;
-        margin-bottom: 1.5rem;
-        font-size: 1rem;
-    }
-    
-    /* 입력 필드와 버튼 정렬 */
-    .input-container {
-        display: flex;
-        gap: 1rem;
-        align-items: end;
+        gap: 12px;
+        align-items: flex-end;
     }
     
     .input-field {
         flex: 1;
     }
     
-    .submit-button {
+    .submit-btn {
         flex-shrink: 0;
     }
     
-    /* 버튼 스타일 개선 */
-    .stButton>button {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        height: 48px !important;
-        min-height: 48px !important;
-        margin-top: 0 !important;
-    }
-    
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-    }
-    
-    /* 입력 필드 높이 맞추기 */
-    .stTextInput>div>div>input {
-        height: 48px !important;
-        min-height: 48px !important;
-    }
-    
-    .stTextInput>div {
-        height: 48px !important;
-    }
-    
-    /* 컨테이너 정렬 */
-    .element-container {
+    /* 벤치마크 카드 */
+    .benchmark-item {
+        background: white;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0.5rem 0;
         display: flex;
-        align-items: end;
+        align-items: center;
+        gap: 1rem;
     }
     
-    /* 관리자 버튼 스타일 */
-    .admin-button button {
-        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
-    }
-    
-    /* 벤치마크 카드 개선 */
-    .benchmark-card {
-        border: none;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        color: #333;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-    
-    .benchmark-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-    }
-    
-    .benchmark-card h4 {
-        color: #2c3e50;
-        margin-bottom: 0.8rem;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-    
-    .benchmark-card p {
-        color: #6c757d;
-        margin: 0.4rem 0;
-        font-size: 0.9rem;
-    }
-    
-    .benchmark-rank {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .rank-badge {
+        background: #4285f4;
         color: white;
         border-radius: 50%;
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .model-info {
+        flex: 1;
+    }
+    
+    .model-name {
+        font-weight: 600;
+        color: #202124;
+        margin-bottom: 0.25rem;
+    }
+    
+    .model-details {
+        font-size: 0.9rem;
+        color: #5f6368;
+    }
+    
+    .accuracy-display {
+        text-align: center;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        min-width: 120px;
     }
     
     .accuracy-score {
-        text-align: center;
-        padding: 1rem;
-        background: rgba(255,255,255,0.8);
-        border-radius: 12px;
-        border: 2px solid #e9ecef;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 0.25rem;
     }
     
-    .accuracy-high { 
-        color: #28a745; 
-        font-weight: 700;
-        font-size: 2rem;
-    }
-    .accuracy-medium { 
-        color: #ffc107; 
-        font-weight: 700;
-        font-size: 2rem;
-    }
-    .accuracy-low { 
-        color: #dc3545; 
-        font-weight: 700;
-        font-size: 2rem;
+    .accuracy-high { color: #0f9d58; }
+    .accuracy-medium { color: #ff9800; }
+    .accuracy-low { color: #ea4335; }
+    
+    .accuracy-detail {
+        font-size: 0.8rem;
+        color: #5f6368;
     }
     
-    /* 대기열 정보 스타일 */
+    /* 관리자 버튼 */
+    .admin-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    /* 심플한 버튼 스타일 */
+    .stButton > button {
+        border-radius: 6px;
+        border: 1px solid #dadce0;
+        background: white;
+        color: #3c4043;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .stButton > button:hover {
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border-color: #d2e3fc;
+    }
+    
+    .stButton > button[kind="primary"] {
+        background: #1a73e8;
+        color: white;
+        border: none;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        background: #1557b0;
+    }
+    
+    /* 큐 정보 */
     .queue-info {
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        background: #e8f0fe;
+        border-left: 4px solid #1a73e8;
         padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #2196f3;
+        border-radius: 0 8px 8px 0;
         margin: 1rem 0;
-    }
-    
-    /* 섹션 헤더 스타일 */
-    .section-header {
-        color: #2c3e50;
-        font-weight: 600;
-        margin: 2rem 0 1rem 0;
-        padding-bottom: 0.5rem;
-        border-bottom: 3px solid #667eea;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -273,7 +233,6 @@ if 'admin_authenticated' not in st.session_state:
     st.session_state.admin_authenticated = False
 
 if 'test_dataset' not in st.session_state:
-    # 보안 테스트 데이터셋 (실제로는 파일에서 로드)
     st.session_state.test_dataset = None
 
 if 'pending_evaluations' not in st.session_state:
@@ -361,7 +320,6 @@ def add_benchmark_result(model_name, accuracy, total_questions, correct_answers,
     st.session_state.benchmark_results.append(new_result)
 
 def add_evaluation_request(model_name):
-    """평가 요청을 대기열에 추가"""
     if model_name not in [req['model_name'] for req in st.session_state.pending_evaluations]:
         request_id = len(st.session_state.pending_evaluations) + 1
         st.session_state.pending_evaluations.append({
@@ -375,18 +333,14 @@ def add_evaluation_request(model_name):
     return False
 
 def load_secure_dataset(uploaded_file, password=None):
-    """보안 테스트 데이터셋 로드 (암호화된 파일 지원)"""
     try:
         file_extension = uploaded_file.name.lower().split('.')[-1]
         
         if file_extension == 'csv':
-            # CSV 파일 처리
             if password:
-                # 암호화된 ZIP 내의 CSV 처리
                 try:
                     with zipfile.ZipFile(BytesIO(uploaded_file.read()), 'r') as zip_file:
                         zip_file.setpassword(password.encode())
-                        # ZIP 내 첫 번째 CSV 파일 찾기
                         csv_files = [f for f in zip_file.namelist() if f.lower().endswith('.csv')]
                         if not csv_files:
                             return False, "ZIP 파일 내에 CSV 파일이 없습니다."
@@ -396,28 +350,19 @@ def load_secure_dataset(uploaded_file, password=None):
                 except Exception as e:
                     return False, f"암호화된 ZIP 파일 읽기 실패: {str(e)}"
             else:
-                # 일반 CSV 파일
                 df = pd.read_csv(uploaded_file)
                 
         elif file_extension in ['xlsx', 'xls']:
-            # 엑셀 파일 처리
-            try:
-                if password:
-                    return False, "암호화된 엑셀 파일을 처리하려면 msoffcrypto 라이브러리가 필요합니다. 현재 ZIP 암호화된 CSV 파일을 사용해주세요."
-                else:
-                    # 일반 엑셀 파일
-                    df = pd.read_excel(uploaded_file)
-                    
-            except Exception as e:
-                return False, f"엑셀 파일 읽기 실패: {str(e)}"
+            if password:
+                return False, "암호화된 엑셀 파일을 처리하려면 msoffcrypto 라이브러리가 필요합니다. 현재 ZIP 암호화된 CSV 파일을 사용해주세요."
+            else:
+                df = pd.read_excel(uploaded_file)
         else:
             return False, "지원되지 않는 파일 형식입니다. CSV, XLS, XLSX 파일만 지원됩니다."
         
-        # 데이터 검증
         if 'question' not in df.columns or 'answer' not in df.columns:
             return False, "파일에 'question'과 'answer' 컬럼이 있어야 합니다."
         
-        # 세션에 저장
         st.session_state.test_dataset = {
             'questions': df['question'].tolist(),
             'answers': df['answer'].tolist(),
@@ -439,53 +384,65 @@ def delete_benchmark_result(result_id):
 # --- 메인 헤더 ---
 st.markdown('<div class="main-header"><h1>🏥 MedLLM Benchmark Results</h1></div>', unsafe_allow_html=True)
 
-# --- 모델 제출 섹션 (공개) ---
+# --- 관리자 버튼 (우상단) ---
+if st.button("⚙️", help="Admin", key="admin_toggle"):
+    if st.session_state.admin_authenticated:
+        st.session_state.admin_mode = not st.session_state.admin_mode
+        if not st.session_state.admin_mode:
+            st.session_state.admin_authenticated = False
+    else:
+        st.session_state.admin_mode = True
+
+# --- 관리자 인증 ---
+if st.session_state.admin_mode and not st.session_state.admin_authenticated:
+    st.subheader("🔐 Admin Authentication")
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        password = st.text_input("Password:", type="password")
+        col_login, col_cancel = st.columns(2)
+        with col_login:
+            if st.button("Login", type="primary", use_container_width=True):
+                if password == "passpass":
+                    st.session_state.admin_authenticated = True
+                    st.success("✅ 로그인 성공!")
+                    st.rerun()
+                else:
+                    st.error("❌ 잘못된 비밀번호입니다.")
+        with col_cancel:
+            if st.button("Cancel", use_container_width=True):
+                st.session_state.admin_mode = False
+                st.rerun()
+
+# --- 모델 제출 섹션 ---
 st.markdown("""
-<div class="submit-section">
-    <div class="submit-header">
-        🚀 Submit Your Model for Evaluation
-    </div>
-    <div class="submit-info">
-        HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.
-    </div>
+<div class="submit-box">
+    <h3>🚀 Submit Your Model for Evaluation</h3>
+    <p style="color: #5f6368; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
 </div>
 """, unsafe_allow_html=True)
 
-# 입력 필드와 버튼을 정확히 같은 높이에 배치
-with st.container():
-    col_input, col_button = st.columns([4, 1])
-    
-    with col_input:
-        model_submission = st.text_input(
-            "HuggingFace Model ID",
-            placeholder="예: Qwen/Qwen3-7B-Instruct",
-            help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요.",
-            label_visibility="collapsed",
-            key="model_input"
-        )
-    
-    with col_button:
-        submit_clicked = st.button(
-            "📤 Submit", 
-            use_container_width=True, 
-            type="primary",
-            key="submit_button"
-        )
+# 입력 필드와 버튼
+col1, col2 = st.columns([4, 1])
+with col1:
+    model_input = st.text_input(
+        "Model ID",
+        placeholder="예: Qwen/Qwen3-7B-Instruct",
+        label_visibility="collapsed"
+    )
+with col2:
+    submit_btn = st.button("📤 Submit", type="primary", use_container_width=True)
 
-# 제출 로직
-if submit_clicked:
-    if model_submission.strip():
-        success = add_evaluation_request(model_submission.strip())
-        if success:
-            st.success(f"✅ {model_submission} 평가 요청이 제출되었습니다!")
-            st.info("관리자가 승인하면 자동으로 평가가 진행됩니다.")
-            st.rerun()
-        else:
-            st.warning("⚠️ 이미 제출된 모델입니다.")
+if submit_btn and model_input.strip():
+    success = add_evaluation_request(model_input.strip())
+    if success:
+        st.success(f"✅ {model_input} 평가 요청이 제출되었습니다!")
+        st.rerun()
     else:
-        st.error("❌ 모델 ID를 입력해주세요.")
+        st.warning("⚠️ 이미 제출된 모델입니다.")
+elif submit_btn:
+    st.error("❌ 모델 ID를 입력해주세요.")
 
-# --- 대기중인 평가 표시 ---
+# --- 대기열 정보 ---
 if st.session_state.pending_evaluations:
     pending_count = len([req for req in st.session_state.pending_evaluations if req['status'] == 'pending'])
     if pending_count > 0:
@@ -494,276 +451,90 @@ if st.session_state.pending_evaluations:
             🕐 현재 <strong>{pending_count}개</strong>의 모델이 평가 대기중입니다.
         </div>
         """, unsafe_allow_html=True)
-        
-        with st.expander("📋 대기중인 평가 목록 보기"):
-            for req in st.session_state.pending_evaluations:
-                if req['status'] == 'pending':
-                    st.markdown(f"• **{req['model_name']}** (제출: {req['submitted_at']})")
 
 st.markdown("---")
 
-# --- 관리자 모드 토글 (숨김) ---
-col1, col2, col3 = st.columns([6, 1, 1])
-with col3:
-    st.markdown('<div class="admin-button">', unsafe_allow_html=True)
-    admin_clicked = st.button("🔧", help="Admin Mode")
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    if admin_clicked:
-        if st.session_state.admin_authenticated:
-            # 이미 인증된 경우 모드 토글
-            st.session_state.admin_mode = not st.session_state.admin_mode
-            if not st.session_state.admin_mode:
-                st.session_state.admin_authenticated = False
-        else:
-            # 인증이 필요한 경우
-            st.session_state.admin_mode = True
+# --- 벤치마크 결과 ---
+st.subheader("📊 Current Benchmark Rankings")
 
-# --- 관리자 인증 섹션 ---
-if st.session_state.admin_mode and not st.session_state.admin_authenticated:
-    st.markdown("---")
-    st.header("🔐 Admin Authentication Required")
-    
-    col_auth1, col_auth2, col_auth3 = st.columns([1, 2, 1])
-    with col_auth2:
-        password = st.text_input("Enter Admin Password:", type="password", key="admin_password")
-        
-        col_login, col_cancel = st.columns(2)
-        with col_login:
-            if st.button("🔑 Login", key="admin_login", use_container_width=True):
-                if password == "passpass":
-                    st.session_state.admin_authenticated = True
-                    st.success("✅ Admin 인증 성공!")
-                    st.rerun()
-                else:
-                    st.error("❌ 잘못된 비밀번호입니다.")
-        
-        with col_cancel:
-            if st.button("❌ Cancel", key="admin_cancel", use_container_width=True):
-                st.session_state.admin_mode = False
-                st.rerun()
-
-# --- 벤치마크 결과 표시 ---
-st.markdown('<h2 class="section-header">📊 Current Benchmark Rankings</h2>', unsafe_allow_html=True)
-
-# 정확도 순으로 정렬
 sorted_results = sorted(st.session_state.benchmark_results, key=lambda x: x['accuracy'], reverse=True)
 
 for i, result in enumerate(sorted_results):
     accuracy_class = get_accuracy_class(result['accuracy'])
     
-    col1, col2, col3, col4 = st.columns([1, 4, 2, 1])
+    col1, col2, col3, col4 = st.columns([0.5, 3.5, 1.5, 0.5])
     
     with col1:
-        st.markdown(f'<div class="benchmark-rank">#{i+1}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rank-badge">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
-        api_error_info = f"<p><strong>⚠️ API Errors:</strong> {result['api_errors']}</p>" if result['api_errors'] > 0 else ""
+        api_error_text = f" • ⚠️ API 오류 {result['api_errors']}개" if result['api_errors'] > 0 else ""
         st.markdown(f"""
-        <div class="benchmark-card">
-            <h4>🤖 {result['model_name']}</h4>
-            <p><strong>📊 Dataset:</strong> {result['dataset_name']}</p>
-            <p><strong>📅 Date:</strong> {result['evaluation_date']}</p>
-            {api_error_info}
+        <div class="benchmark-item">
+            <div class="model-info">
+                <div class="model-name">{result['model_name']}</div>
+                <div class="model-details">
+                    {result['dataset_name']} • {result['evaluation_date']}{api_error_text}
+                </div>
+            </div>
         </div>
         """, unsafe_allow_html=True)
     
     with col3:
         st.markdown(f"""
-        <div class="accuracy-score">
-            <div class="{accuracy_class}">{result['accuracy']:.1f}%</div>
-            <p style="margin: 0.5rem 0 0 0; color: #6c757d; font-size: 0.9rem;">
-                {result['correct_answers']} / {result['total_questions']} 정답
-            </p>
+        <div class="accuracy-display">
+            <div class="accuracy-score {accuracy_class}">{result['accuracy']:.1f}%</div>
+            <div class="accuracy-detail">{result['correct_answers']}/{result['total_questions']} 정답</div>
         </div>
         """, unsafe_allow_html=True)
     
     with col4:
         if st.session_state.admin_mode and st.session_state.admin_authenticated:
-            if st.button("🗑️", key=f"delete_{result['id']}", help="Delete Result"):
+            if st.button("🗑️", key=f"del_{result['id']}", help="삭제"):
                 delete_benchmark_result(result['id'])
                 st.rerun()
 
-# --- 관리자 모드: 평가 관리 ---
+# --- 관리자 기능 ---
 if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
-    st.header("🔧 Admin: Manage Evaluations")
-
-    # 테스트 데이터셋 관리
-    st.subheader("📊 Secure Test Dataset")
-    if st.session_state.test_dataset:
-        encryption_badge = "🔒 암호화됨" if st.session_state.test_dataset.get('is_encrypted', False) else "🔓 일반"
-        file_type_badge = st.session_state.test_dataset.get('file_type', 'unknown').upper()
-        
-        st.success(f"✅ 테스트 데이터셋 로드됨: {st.session_state.test_dataset['total_count']}개 질문")
-        st.info(f"📄 파일 형식: {file_type_badge} | 보안: {encryption_badge} | 로드 시간: {st.session_state.test_dataset['loaded_at']}")
-        
-        col_ds1, col_ds2 = st.columns(2)
-        with col_ds1:
-            if st.button("🗑️ Remove Dataset", help="현재 로드된 테스트 데이터셋을 제거합니다."):
-                st.session_state.test_dataset = None
-                st.success("데이터셋이 제거되었습니다.")
-                st.rerun()
-        
-        with col_ds2:
-            if st.button("🔄 Reload Dataset", help="테스트 데이터셋을 다시 로드합니다."):
-                st.session_state.test_dataset = None
-                st.rerun()
-    else:
-        st.warning("⚠️ 테스트 데이터셋이 로드되지 않았습니다.")
-        
-        # 파일 업로드 및 암호 입력
-        uploaded_test_file = st.file_uploader(
-            "보안 테스트 데이터셋 업로드",
-            type=['csv', 'xlsx', 'xls'],
-            help="암호화된 파일도 지원됩니다. CSV, Excel 파일 모두 가능합니다.",
-            key="secure_dataset"
-        )
-        
-        # 암호 입력 (선택사항)
-        dataset_password = st.text_input(
-            "파일 암호 (선택사항)",
-            type="password",
-            help="암호화된 파일의 경우 암호를 입력하세요. 일반 파일은 비워두세요.",
-            key="dataset_password"
-        )
-        
-        col_upload1, col_upload2 = st.columns(2)
-        
-        with col_upload1:
-            if st.button("📁 Load Dataset", help="데이터셋을 로드합니다."):
-                if uploaded_test_file:
-                    success, message = load_secure_dataset(uploaded_test_file, dataset_password if dataset_password else None)
-                    if success:
-                        st.success(message)
-                        st.rerun()
-                    else:
-                        st.error(message)
-                else:
-                    st.error("파일을 먼저 선택해주세요.")
-        
-        with col_upload2:
-            st.info("💡 **지원 형식:**\n- CSV 파일 (일반/ZIP 암호화)\n- Excel 파일 (일반)\n- 'question', 'answer' 컬럼 필수")
-
-    # 대기중인 평가 관리
-    st.subheader("📋 Pending Evaluation Queue")
-    if st.session_state.pending_evaluations:
-        pending_requests = [req for req in st.session_state.pending_evaluations if req['status'] == 'pending']
-        
-        if pending_requests:
-            st.info(f"🕐 {len(pending_requests)}개의 평가 요청이 대기중입니다.")
-            
-            for req in pending_requests:
-                col_req1, col_req2, col_req3 = st.columns([3, 1, 1])
-                
-                with col_req1:
-                    st.text(f"📦 {req['model_name']}")
-                    st.caption(f"제출: {req['submitted_at']}")
-                
-                with col_req2:
-                    if st.button("✅ Approve", key=f"approve_{req['id']}", help="평가 승인 및 실행"):
-                        if st.session_state.test_dataset:
-                            req['status'] = 'approved'
-                            st.success("평가가 승인되었습니다!")
-                            st.rerun()
-                        else:
-                            st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
-                
-                with col_req3:
-                    if st.button("❌ Reject", key=f"reject_{req['id']}", help="평가 요청 거부"):
-                        st.session_state.pending_evaluations.remove(req)
-                        st.success("평가 요청이 거부되었습니다.")
-                        st.rerun()
-                
-                st.markdown("---")
-        else:
-            st.info("처리할 평가 요청이 없습니다.")
-    else:
-        st.info("제출된 평가 요청이 없습니다.")
-
-    # 수동 평가 섹션
-    st.subheader("🔧 Manual Evaluation")
+    st.subheader("🔧 Admin Panel")
     
-    with st.sidebar:
-        st.header("⚙️ Manual Evaluation Settings")
-
-        st.info("**권장:** Streamlit Cloud의 Secrets에 `HF_TOKEN`을 설정하세요.")
-        api_key = st.text_input(
-            "Hugging Face Token (hf_...)", 
-            type="password", 
-            help="Hugging Face API 토큰을 입력하세요.",
-            value=st.secrets.get("HF_TOKEN", "")
-        )
+    # 테스트 데이터셋 관리
+    if st.session_state.test_dataset:
+        st.success(f"✅ 데이터셋 로드됨: {st.session_state.test_dataset['total_count']}개 질문")
+        if st.button("🗑️ Remove Dataset"):
+            st.session_state.test_dataset = None
+            st.rerun()
+    else:
+        st.warning("⚠️ 테스트 데이터셋이 없습니다.")
+        uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
+        password = st.text_input("파일 암호 (선택사항)", type="password")
         
-        # 여러 모델 입력
-        model_ids_input = st.text_area(
-            "HuggingFace Model IDs (한 줄에 하나씩)", 
-            value="Qwen/Qwen3-14B-Instruct\nQwen/Qwen3-7B-Instruct",
-            help="평가할 모델들을 한 줄에 하나씩 입력하세요.",
-            height=150
-        )
-
-        dataset_name = st.text_input(
-            "Dataset Name",
-            value="Medical QA Dataset v1.3",
-            help="데이터셋 이름을 입력하세요."
-        )
-
-    if st.button("🚀 Start Manual Evaluation"):
-        if not api_key:
-            st.error("❌ Hugging Face 토큰을 입력하거나 Secrets에 설정하세요.")
-        elif not model_ids_input.strip():
-            st.error("❌ 모델 ID를 입력하세요.")
-        elif not st.session_state.test_dataset:
-            st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
-        else:
-            try:
-                # 모델 IDs 파싱
-                model_ids = [mid.strip() for mid in model_ids_input.strip().split('\n') if mid.strip()]
-                
-                questions = st.session_state.test_dataset['questions']
-                correct_answers = st.session_state.test_dataset['answers']
-                
-                st.info(f"🤖 {len(model_ids)}개 모델 순차 평가 시작...")
-
-                evaluator = MedicalEvaluator(api_key)
-
-                # 각 모델에 대해 순차적으로 평가
-                for model_idx, model_id in enumerate(model_ids):
-                    clean_model_id = model_id.strip().strip('"\'')
-                    
-                    st.subheader(f"Evaluating Model {model_idx + 1}/{len(model_ids)}: {clean_model_id}")
-                    
-                    progress_bar = st.progress(0, text=f"평가 시작: {clean_model_id}")
-                    evaluation_results, api_errors = evaluator.evaluate(clean_model_id, questions, correct_answers, progress_bar)
-                    progress_bar.empty()
-
-                    results_df = pd.DataFrame(evaluation_results)
-                    correct_count = results_df['is_correct'].sum()
-                    total_count = len(results_df)
-                    accuracy = (correct_count / total_count) * 100 if total_count > 0 else 0
-
-                    # 벤치마크 결과에 추가
-                    add_benchmark_result(
-                        clean_model_id, 
-                        accuracy, 
-                        total_count, 
-                        correct_count, 
-                        dataset_name,
-                        api_errors
-                    )
-
-                    st.success(f"✅ {clean_model_id}: {accuracy:.2f}% ({correct_count}/{total_count})")
-                    
-                    if api_errors > 0:
-                        st.warning(f"⚠️ API 오류 {api_errors}개 발생")
-
-                st.success("🎉 모든 모델 평가 완료! 페이지가 새로고침됩니다.")
-                time.sleep(2)
+        if st.button("📁 Load Dataset") and uploaded_file:
+            success, message = load_secure_dataset(uploaded_file, password if password else None)
+            if success:
+                st.success(message)
                 st.rerun()
-
-            except Exception as e:
-                st.error(f"오류가 발생했습니다: {e}")
+            else:
+                st.error(message)
+    
+    # 대기열 관리
+    if st.session_state.pending_evaluations:
+        st.subheader("📋 Pending Queue")
+        for req in st.session_state.pending_evaluations:
+            if req['status'] == 'pending':
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.text(f"📦 {req['model_name']}")
+                with col2:
+                    if st.button("✅", key=f"approve_{req['id']}", help="승인"):
+                        req['status'] = 'approved'
+                        st.rerun()
+                with col3:
+                    if st.button("❌", key=f"reject_{req['id']}", help="거부"):
+                        st.session_state.pending_evaluations.remove(req)
+                        st.rerun()
 
 else:
-    st.info("🔧 관리자 기능을 사용하려면 우측 상단의 설정 버튼을 클릭하세요.")
+    if not st.session_state.admin_mode:
+        st.info("💡 새로운 평가를 원하시면 관리자에게 문의하세요.")
