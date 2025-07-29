@@ -86,13 +86,31 @@ st.markdown("""
         font-size: 1rem;
         transition: all 0.3s ease;
         box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        height: 56px;
+        height: 48px !important;
+        min-height: 48px !important;
+        margin-top: 0 !important;
     }
     
     .stButton>button:hover {
         background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    /* 입력 필드 높이 맞추기 */
+    .stTextInput>div>div>input {
+        height: 48px !important;
+        min-height: 48px !important;
+    }
+    
+    .stTextInput>div {
+        height: 48px !important;
+    }
+    
+    /* 컨테이너 정렬 */
+    .element-container {
+        display: flex;
+        align-items: end;
     }
     
     /* 관리자 버튼 스타일 */
@@ -433,21 +451,26 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# 입력 필드와 버튼을 같은 높이에 배치
-col_input, col_button = st.columns([4, 1])
-
-with col_input:
-    model_submission = st.text_input(
-        "HuggingFace Model ID",
-        placeholder="예: Qwen/Qwen3-7B-Instruct",
-        help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요.",
-        label_visibility="collapsed"
-    )
-
-with col_button:
-    # 빈 공간으로 버튼 위치 맞추기
-    st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
-    submit_clicked = st.button("📤 Submit", use_container_width=True, type="primary")
+# 입력 필드와 버튼을 정확히 같은 높이에 배치
+with st.container():
+    col_input, col_button = st.columns([4, 1])
+    
+    with col_input:
+        model_submission = st.text_input(
+            "HuggingFace Model ID",
+            placeholder="예: Qwen/Qwen3-7B-Instruct",
+            help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요.",
+            label_visibility="collapsed",
+            key="model_input"
+        )
+    
+    with col_button:
+        submit_clicked = st.button(
+            "📤 Submit", 
+            use_container_width=True, 
+            type="primary",
+            key="submit_button"
+        )
 
 # 제출 로직
 if submit_clicked:
