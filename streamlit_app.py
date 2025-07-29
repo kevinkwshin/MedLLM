@@ -182,7 +182,7 @@ if 'benchmark_results' not in st.session_state:
     st.session_state.benchmark_results = [
         {
             'id': 1,
-            'model_name': 'Qwen/Qwen3-14B-Instruct',
+            'model_name': 'Qwen/Qwen3-14B',
             'accuracy': 86.7,
             'total_questions': 240,
             'correct_answers': 208,
@@ -192,7 +192,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 2,
-            'model_name': 'Qwen/Qwen3-7B-Instruct',
+            'model_name': 'Qwen/Qwen3-8B',
             'accuracy': 82.1,
             'total_questions': 240,
             'correct_answers': 197,
@@ -202,7 +202,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 3,
-            'model_name': 'Qwen/Qwen3-3B-Instruct',
+            'model_name': 'Qwen/Qwen3-4B',
             'accuracy': 77.5,
             'total_questions': 240,
             'correct_answers': 186,
@@ -212,7 +212,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 4,
-            'model_name': 'Qwen/Qwen3-1.5B-Instruct',
+            'model_name': 'Qwen/Qwen3-1.7B',
             'accuracy': 71.3,
             'total_questions': 240,
             'correct_answers': 171,
@@ -222,7 +222,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 5,
-            'model_name': 'Qwen/Qwen3-0.5B-Instruct',
+            'model_name': 'Qwen/Qwen3-0.6B',
             'accuracy': 63.8,
             'total_questions': 240,
             'correct_answers': 153,
