@@ -6,8 +6,6 @@ from io import StringIO, BytesIO
 from openai import OpenAI
 from datetime import datetime
 import json
-import openpyxl
-from openpyxl import load_workbook
 import zipfile
 
 # --- 페이지 설정 ---
@@ -217,16 +215,64 @@ def add_evaluation_request(model_name):
         return True
     return False
 
-def process_evaluation_queue():
-    """대기중인 평가 요청들을 처리"""
-    if not st.session_state.test_dataset:
-        return False, "테스트 데이터셋이 로드되지 않았습니다."
-    
-    pending_requests = [req for req in st.session_state.pending_evaluations if req['status'] == 'pending']
-    if not pending_requests:
-        return False, "처리할 평가 요청이 없습니다."
-    
-    return True, f"{len(pending_requests)}개의 평가 요청이 대기중입니다."
+def load_secure_dataset(uploaded_file, password=None):
+    """보안 테스트 데이터셋 로드 (암호화된 파일 지원)"""
+    try:
+        file_extension = uploaded_file.name.lower().split('.')[-1]
+        
+        if file_extension == 'csv':
+            # CSV 파일 처리
+            if password:
+                # 암호화된 ZIP 내의 CSV 처리
+                try:
+                    with zipfile.ZipFile(BytesIO(uploaded_file.read()), 'r') as zip_file:
+                        zip_file.setpassword(password.encode())
+                        # ZIP 내 첫 번째 CSV 파일 찾기
+                        csv_files = [f for f in zip_file.namelist() if f.lower().endswith('.csv')]
+                        if not csv_files:
+                            return False, "ZIP 파일 내에 CSV 파일이 없습니다."
+                        
+                        with zip_file.open(csv_files[0]) as csv_file:
+                            df = pd.read_csv(csv_file)
+                except Exception as e:
+                    return False, f"암호화된 ZIP 파일 읽기 실패: {str(e)}"
+            else:
+                # 일반 CSV 파일
+                df = pd.read_csv(uploaded_file)
+                
+        elif file_extension in ['xlsx', 'xls']:
+            # 엑셀 파일 처리
+            try:
+                if password:
+                    return False, "암호화된 엑셀 파일을 처리하려면 msoffcrypto 라이브러리가 필요합니다. 현재 ZIP 암호화된 CSV 파일을 사용해주세요."
+                else:
+                    # 일반 엑셀 파일
+                    df = pd.read_excel(uploaded_file)
+                    
+            except Exception as e:
+                return False, f"엑셀 파일 읽기 실패: {str(e)}"
+        else:
+            return False, "지원되지 않는 파일 형식입니다. CSV, XLS, XLSX 파일만 지원됩니다."
+        
+        # 데이터 검증
+        if 'question' not in df.columns or 'answer' not in df.columns:
+            return False, "파일에 'question'과 'answer' 컬럼이 있어야 합니다."
+        
+        # 세션에 저장
+        st.session_state.test_dataset = {
+            'questions': df['question'].tolist(),
+            'answers': df['answer'].tolist(),
+            'total_count': len(df),
+            'loaded_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'file_type': file_extension,
+            'is_encrypted': password is not None
+        }
+        
+        encryption_info = " (암호화됨)" if password else ""
+        return True, f"{len(df)}개의 질문이 포함된 테스트 데이터셋이 로드되었습니다.{encryption_info}"
+        
+    except Exception as e:
+        return False, f"데이터셋 로드 중 오류: {str(e)}"
 
 def delete_benchmark_result(result_id):
     st.session_state.benchmark_results = [r for r in st.session_state.benchmark_results if r['id'] != result_id]
@@ -242,7 +288,7 @@ col_submit1, col_submit2 = st.columns([3, 1])
 with col_submit1:
     model_submission = st.text_input(
         "HuggingFace Model ID", 
-        placeholder="예: Qwen/Qwen2.5-7B-Instruct",
+        placeholder="예: Qwen/Qwen3-7B-Instruct",
         help="평가하고 싶은 HuggingFace 모델의 전체 경로를 입력하세요."
     )
 
@@ -347,7 +393,7 @@ for i, result in enumerate(sorted_results):
                 delete_benchmark_result(result['id'])
                 st.rerun()
 
-# --- 관리자 모드: 새로운 평가 실행 ---
+# --- 관리자 모드: 평가 관리 ---
 if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
     st.header("🔧 Admin: Manage Evaluations")
@@ -406,7 +452,7 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
                     st.error("파일을 먼저 선택해주세요.")
         
         with col_upload2:
-            st.info("💡 **지원 형식:**\n- CSV 파일 (일반/ZIP 암호화)\n- Excel 파일 (일반/암호화)\n- 'question', 'answer' 컬럼 필수")
+            st.info("💡 **지원 형식:**\n- CSV 파일 (일반/ZIP 암호화)\n- Excel 파일 (일반)\n- 'question', 'answer' 컬럼 필수")
 
     # 대기중인 평가 관리
     st.subheader("📋 Pending Evaluation Queue")
@@ -426,9 +472,6 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
                 with col_req2:
                     if st.button("✅ Approve", key=f"approve_{req['id']}", help="평가 승인 및 실행"):
                         if st.session_state.test_dataset:
-                            # 평가 실행 로직
-                            st.info(f"🤖 {req['model_name']} 평가를 시작합니다...")
-                            # 여기서 실제 평가를 실행할 수 있습니다
                             req['status'] = 'approved'
                             st.success("평가가 승인되었습니다!")
                             st.rerun()
@@ -442,32 +485,12 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
                         st.rerun()
                 
                 st.markdown("---")
-            
-            # 일괄 처리 버튼
-            col_batch1, col_batch2 = st.columns(2)
-            with col_batch1:
-                if st.button("🚀 Process All Pending", help="모든 대기중인 평가를 실행합니다."):
-                    if st.session_state.test_dataset:
-                        st.info("모든 대기중인 평가를 시작합니다...")
-                        # 여기서 모든 대기중인 평가를 실행
-                        for req in pending_requests:
-                            req['status'] = 'processing'
-                        st.success("모든 평가가 시작되었습니다!")
-                        st.rerun()
-                    else:
-                        st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
-            
-            with col_batch2:
-                if st.button("🗑️ Clear All Pending", help="모든 대기중인 평가를 삭제합니다."):
-                    st.session_state.pending_evaluations = [req for req in st.session_state.pending_evaluations if req['status'] != 'pending']
-                    st.success("모든 대기중인 평가가 삭제되었습니다.")
-                    st.rerun()
         else:
             st.info("처리할 평가 요청이 없습니다.")
     else:
         st.info("제출된 평가 요청이 없습니다.")
 
-    # 수동 평가 섹션 (기존 기능 유지)
+    # 수동 평가 섹션
     st.subheader("🔧 Manual Evaluation")
     
     with st.sidebar:
@@ -495,68 +518,21 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             help="데이터셋 이름을 입력하세요."
         )
 
-        st.subheader("📊 Alternative Dataset (Optional)")
-        uploaded_file = st.file_uploader(
-            "대체 데이터셋 파일 업로드 (선택사항)",
-            type=['csv', 'xlsx', 'xls'],
-            help="기본 테스트 데이터셋 대신 사용할 파일 (암호화 지원)",
-            key="alternative_dataset"
-        )
-        
-        alternative_password = st.text_input(
-            "대체 파일 암호 (선택사항)",
-            type="password",
-            help="암호화된 대체 파일의 경우 암호를 입력하세요.",
-            key="alternative_password"
-        )
-        
-        sample_csv = '''question,answer
-"25세 여성이 심한 복통으로 응급실에 내원했습니다. 오른쪽 하복부에 압통이 있고, 발열과 오심을 동반합니다. 가장 가능성이 높은 진단은?\nA) 급성 위염\nB) 급성 충수염\nC) 요로감염\nD) 급성 담낭염","B"
-"45세 남성이 운동 후 심한 흉통을 호소합니다. 흉통은 왼쪽 팔로 방사되며, 식은땀을 흘리고 있습니다. 가장 우선적으로 시행해야 할 검사는?\nA) 흉부 X-ray\nB) 심전도(ECG)\nC) 복부 CT\nD) 혈액검사","B"
-"60세 여성이 3개월간의 체중감소와 복부팽만을 주소로 내원했습니다. 복부 초음파에서 복강 내 다량의 복수가 관찰됩니다. 가장 가능성이 높은 원인은?\nA) 심부전\nB) 간경화\nC) 복막염\nD) 난소암","D"
-'''
-        st.download_button(
-            label="📥 샘플 CSV 다운로드",
-            data=sample_csv,
-            file_name="medical_qa_sample.csv",
-            mime="text/csv"
-        )
-
     if st.button("🚀 Start Manual Evaluation"):
         if not api_key:
             st.error("❌ Hugging Face 토큰을 입력하거나 Secrets에 설정하세요.")
         elif not model_ids_input.strip():
             st.error("❌ 모델 ID를 입력하세요.")
-        elif not st.session_state.test_dataset and uploaded_file is None:
-            st.error("❌ 테스트 데이터셋이 로드되지 않았고 대체 데이터셋도 제공되지 않았습니다.")
+        elif not st.session_state.test_dataset:
+            st.error("❌ 테스트 데이터셋을 먼저 로드해주세요.")
         else:
             try:
                 # 모델 IDs 파싱
                 model_ids = [mid.strip() for mid in model_ids_input.strip().split('\n') if mid.strip()]
                 
-                # 데이터셋 선택
-                if uploaded_file:
-                    # 대체 데이터셋 사용
-                    temp_success, temp_message = load_secure_dataset(uploaded_file, alternative_password if alternative_password else None)
-                    if not temp_success:
-                        st.error(f"❌ 대체 데이터셋 로드 실패: {temp_message}")
-                        st.stop()
-                    
-                    # 임시 데이터셋 사용
-                    temp_df = pd.read_csv(uploaded_file) if uploaded_file.name.endswith('.csv') else pd.read_excel(uploaded_file)
-                    if 'question' not in temp_df.columns or 'answer' not in temp_df.columns:
-                        st.error("❌ 파일에 'question'과 'answer' 컬럼이 있어야 합니다.")
-                        st.stop()
-                    questions = temp_df['question'].tolist()
-                    correct_answers = temp_df['answer'].tolist()
-                    st.info(f"✅ 대체 데이터셋 사용: {len(temp_df)}개의 질문")
-                else:
-                    # 메인 테스트 데이터셋 사용
-                    questions = st.session_state.test_dataset['questions']
-                    correct_answers = st.session_state.test_dataset['answers']
-                    encryption_info = " (암호화됨)" if st.session_state.test_dataset.get('is_encrypted', False) else ""
-                    st.info(f"✅ 보안 테스트 데이터셋 사용: {len(questions)}개의 질문{encryption_info}")
-
+                questions = st.session_state.test_dataset['questions']
+                correct_answers = st.session_state.test_dataset['answers']
+                
                 st.info(f"🤖 {len(model_ids)}개 모델 순차 평가 시작...")
 
                 evaluator = MedicalEvaluator(api_key)
@@ -594,51 +570,6 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
                 st.success("🎉 모든 모델 평가 완료! 페이지가 새로고침됩니다.")
                 time.sleep(2)
                 st.rerun()
-
-            except Exception as e:
-                st.error(f"오류가 발생했습니다: {e}")' not in df.columns:
-                    st.error("❌ CSV 파일에 'question'과 'answer' 컬럼이 있어야 합니다.")
-                else:
-                    st.info(f"✅ {len(df)}개의 질문으로 데이터셋 로드 완료.")
-                    st.info(f"🤖 {len(model_ids)}개 모델 순차 평가 시작...")
-
-                    evaluator = MedicalEvaluator(api_key)
-                    questions = df['question'].tolist()
-                    correct_answers = df['answer'].tolist()
-
-                    # 각 모델에 대해 순차적으로 평가
-                    for model_idx, model_id in enumerate(model_ids):
-                        clean_model_id = model_id.strip().strip('"\'')
-                        
-                        st.subheader(f"Evaluating Model {model_idx + 1}/{len(model_ids)}: {clean_model_id}")
-                        
-                        progress_bar = st.progress(0, text=f"평가 시작: {clean_model_id}")
-                        evaluation_results, api_errors = evaluator.evaluate(clean_model_id, questions, correct_answers, progress_bar)
-                        progress_bar.empty()
-
-                        results_df = pd.DataFrame(evaluation_results)
-                        correct_count = results_df['is_correct'].sum()
-                        total_count = len(results_df)
-                        accuracy = (correct_count / total_count) * 100 if total_count > 0 else 0
-
-                        # 벤치마크 결과에 추가
-                        add_benchmark_result(
-                            clean_model_id, 
-                            accuracy, 
-                            total_count, 
-                            correct_count, 
-                            dataset_name,
-                            api_errors
-                        )
-
-                        st.success(f"✅ {clean_model_id}: {accuracy:.2f}% ({correct_count}/{total_count})")
-                        
-                        if api_errors > 0:
-                            st.warning(f"⚠️ API 오류 {api_errors}개 발생")
-
-                    st.success("🎉 모든 모델 평가 완료! 페이지가 새로고침됩니다.")
-                    time.sleep(2)
-                    st.rerun()
 
             except Exception as e:
                 st.error(f"오류가 발생했습니다: {e}")
