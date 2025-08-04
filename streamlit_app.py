@@ -92,16 +92,10 @@ st.markdown("""
         flex: 1;
     }
     
-    .model-name a {
-        color: #1a73e8;
-        text-decoration: none;
+    .model-name {
         font-weight: 600;
-        transition: color 0.2s ease;
-    }
-    
-    .model-name a:hover {
-        color: #1557b0;
-        text-decoration: underline;
+        color: #202124;
+        margin-bottom: 0.25rem;
     }
     
     .model-details {
@@ -182,7 +176,7 @@ if 'benchmark_results' not in st.session_state:
     st.session_state.benchmark_results = [
         {
             'id': 1,
-            'model_name': 'Qwen/Qwen3-14B',
+            'model_name': 'Qwen/Qwen3-14B-Instruct',
             'accuracy': 86.7,
             'total_questions': 240,
             'correct_answers': 208,
@@ -192,7 +186,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 2,
-            'model_name': 'Qwen/Qwen3-8B',
+            'model_name': 'Qwen/Qwen3-7B-Instruct',
             'accuracy': 82.1,
             'total_questions': 240,
             'correct_answers': 197,
@@ -202,7 +196,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 3,
-            'model_name': 'Qwen/Qwen3-4B',
+            'model_name': 'Qwen/Qwen3-3B-Instruct',
             'accuracy': 77.5,
             'total_questions': 240,
             'correct_answers': 186,
@@ -212,7 +206,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 4,
-            'model_name': 'Qwen/Qwen3-1.7B',
+            'model_name': 'Qwen/Qwen3-1.5B-Instruct',
             'accuracy': 71.3,
             'total_questions': 240,
             'correct_answers': 171,
@@ -222,7 +216,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 5,
-            'model_name': 'Qwen/Qwen3-0.6B',
+            'model_name': 'Qwen/Qwen3-0.5B-Instruct',
             'accuracy': 63.8,
             'total_questions': 240,
             'correct_answers': 153,
@@ -422,7 +416,7 @@ if st.session_state.admin_mode and not st.session_state.admin_authenticated:
 # --- 모델 제출 섹션 ---
 st.markdown("""
 <div class="submit-box">
-    <h3 style="color: #202124;">🚀 Submit Your Model for Evaluation</h3>
+    <h3>🚀 Submit Your Model for Evaluation</h3>
     <p style="color: #333333; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -474,15 +468,10 @@ for i, result in enumerate(sorted_results):
         st.markdown(f'<div class="rank-badge">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
-        huggingface_url = f"https://huggingface.co/{result['model_name']}"
         st.markdown(f"""
         <div class="benchmark-item">
             <div class="model-info">
-                <div class="model-name">
-                    <a href="{huggingface_url}" target="_blank" style="color: #1a73e8; text-decoration: none;">
-                        🤖 {result['model_name']}
-                    </a>
-                </div>
+                <div class="model-name">{result['model_name']}</div>
                 <div class="model-details">
                     {result['dataset_name']} • {result['evaluation_date']}
                 </div>
@@ -516,15 +505,10 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             st.session_state.test_dataset = None
             st.rerun()
     else:
-        # st.warning("⚠️ 테스트 데이터셋이 없습니다.")
-        st.markdown('<p style="color: #333333; background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107;">⚠️ 테스트 데이터셋이 없습니다.</p>', unsafe_allow_html=True)
-        # uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
-        st.markdown('<label style="color: #333333; font-weight: 500;">📁 데이터셋 업로드</label>', unsafe_allow_html=True)
-        uploaded_file = st.file_uploader("", type=['csv', 'xlsx'], label_visibility="collapsed")
-        # password = st.text_input("파일 암호 (선택사항)", type="password")
-        st.markdown('<label style="color: #333333; font-weight: 500;">🔒 파일 암호 (선택사항)</label>', unsafe_allow_html=True)
-        password = st.text_input("", type="password", label_visibility="collapsed")
-
+        st.warning("⚠️ 테스트 데이터셋이 없습니다.")
+        uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
+        password = st.text_input("파일 암호 (선택사항)", type="password")
+        
         if st.button("📁 Load Dataset") and uploaded_file:
             success, message = load_secure_dataset(uploaded_file, password if password else None)
             if success:
@@ -552,4 +536,4 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
 
 else:
     if not st.session_state.admin_mode:
-        st.markdown('<p style="color: #333333; background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #1a73e8;">💡 새로운 평가를 원하시면 관리자에게 문의하세요.</p>', unsafe_allow_html=True)
+        st.info("💡 새로운 평가를 원하시면 관리자에게 문의하세요.")
