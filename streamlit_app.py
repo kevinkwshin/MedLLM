@@ -92,10 +92,16 @@ st.markdown("""
         flex: 1;
     }
     
-    .model-name {
+    .model-name a {
+        color: #1a73e8;
+        text-decoration: none;
         font-weight: 600;
-        color: #202124;
-        margin-bottom: 0.25rem;
+        transition: color 0.2s ease;
+    }
+    
+    .model-name a:hover {
+        color: #1557b0;
+        text-decoration: underline;
     }
     
     .model-details {
@@ -176,7 +182,7 @@ if 'benchmark_results' not in st.session_state:
     st.session_state.benchmark_results = [
         {
             'id': 1,
-            'model_name': 'Qwen/Qwen3-14B-Instruct',
+            'model_name': 'Qwen/Qwen3-14B',
             'accuracy': 86.7,
             'total_questions': 240,
             'correct_answers': 208,
@@ -186,7 +192,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 2,
-            'model_name': 'Qwen/Qwen3-7B-Instruct',
+            'model_name': 'Qwen/Qwen3-8B',
             'accuracy': 82.1,
             'total_questions': 240,
             'correct_answers': 197,
@@ -196,7 +202,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 3,
-            'model_name': 'Qwen/Qwen3-3B-Instruct',
+            'model_name': 'Qwen/Qwen3-4B',
             'accuracy': 77.5,
             'total_questions': 240,
             'correct_answers': 186,
@@ -206,7 +212,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 4,
-            'model_name': 'Qwen/Qwen3-1.5B-Instruct',
+            'model_name': 'Qwen/Qwen3-1.7B',
             'accuracy': 71.3,
             'total_questions': 240,
             'correct_answers': 171,
@@ -216,7 +222,7 @@ if 'benchmark_results' not in st.session_state:
         },
         {
             'id': 5,
-            'model_name': 'Qwen/Qwen3-0.5B-Instruct',
+            'model_name': 'Qwen/Qwen3-0.6B',
             'accuracy': 63.8,
             'total_questions': 240,
             'correct_answers': 153,
@@ -416,7 +422,7 @@ if st.session_state.admin_mode and not st.session_state.admin_authenticated:
 # --- 모델 제출 섹션 ---
 st.markdown("""
 <div class="submit-box">
-    <h3>🚀 Submit Your Model for Evaluation</h3>
+    <h3 style="color: #202124;">🚀 Submit Your Model for Evaluation</h3>
     <p style="color: #333333; margin-bottom: 1rem;">HuggingFace 모델 주소를 제출하면 자동으로 평가가 진행됩니다.</p>
 </div>
 """, unsafe_allow_html=True)
@@ -426,7 +432,7 @@ col1, col2 = st.columns([4, 1])
 with col1:
     model_input = st.text_input(
         "Model ID",
-        placeholder="예: Qwen/Qwen3-7B-Instruct",
+        placeholder="예: Qwen/Qwen3-30B",
         label_visibility="collapsed"
     )
 with col2:
@@ -455,7 +461,8 @@ if st.session_state.pending_evaluations:
 st.markdown("---")
 
 # --- 벤치마크 결과 ---
-st.subheader("📊 Current Benchmark Rankings")
+# st.subheader("📊 Current Benchmark Rankings")
+st.markdown('<h3 style="color: #333333; font-weight: 600; margin: 2rem 0 1rem 0;">📊 Current Benchmark Rankings</h3>', unsafe_allow_html=True)
 
 sorted_results = sorted(st.session_state.benchmark_results, key=lambda x: x['accuracy'], reverse=True)
 
@@ -468,10 +475,15 @@ for i, result in enumerate(sorted_results):
         st.markdown(f'<div class="rank-badge">#{i+1}</div>', unsafe_allow_html=True)
     
     with col2:
+        huggingface_url = f"https://huggingface.co/{result['model_name']}"
         st.markdown(f"""
         <div class="benchmark-item">
             <div class="model-info">
-                <div class="model-name">{result['model_name']}</div>
+                <div class="model-name">
+                    <a href="{huggingface_url}" target="_blank" style="color: #1a73e8; text-decoration: none;">
+                        🤖 {result['model_name']}
+                    </a>
+                </div>
                 <div class="model-details">
                     {result['dataset_name']} • {result['evaluation_date']}
                 </div>
@@ -496,7 +508,8 @@ for i, result in enumerate(sorted_results):
 # --- 관리자 기능 ---
 if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
-    st.subheader("🔧 Admin Panel")
+    # st.subheader("🔧 Admin Panel")
+    st.markdown('<h3 style="color: #333333; font-weight: 600; margin: 2rem 0 1rem 0;">🔧 Admin Panel</h3>', unsafe_allow_html=True)
     
     # 테스트 데이터셋 관리
     if st.session_state.test_dataset:
@@ -505,10 +518,15 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
             st.session_state.test_dataset = None
             st.rerun()
     else:
-        st.warning("⚠️ 테스트 데이터셋이 없습니다.")
-        uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
-        password = st.text_input("파일 암호 (선택사항)", type="password")
-        
+        # st.warning("⚠️ 테스트 데이터셋이 없습니다.")
+        st.markdown('<p style="color: #333333; background: #fff3cd; padding: 1rem; border-radius: 8px; border-left: 4px solid #ffc107;">⚠️ 테스트 데이터셋이 없습니다.</p>', unsafe_allow_html=True)
+        # uploaded_file = st.file_uploader("데이터셋 업로드", type=['csv', 'xlsx'])
+        st.markdown('<label style="color: #333333; font-weight: 500;">📁 데이터셋 업로드</label>', unsafe_allow_html=True)
+        uploaded_file = st.file_uploader("", type=['csv', 'xlsx'], label_visibility="collapsed")
+        # password = st.text_input("파일 암호 (선택사항)", type="password")
+        st.markdown('<label style="color: #333333; font-weight: 500;">🔒 파일 암호 (선택사항)</label>', unsafe_allow_html=True)
+        password = st.text_input("", type="password", label_visibility="collapsed")
+
         if st.button("📁 Load Dataset") and uploaded_file:
             success, message = load_secure_dataset(uploaded_file, password if password else None)
             if success:
@@ -536,4 +554,4 @@ if st.session_state.admin_mode and st.session_state.admin_authenticated:
 
 else:
     if not st.session_state.admin_mode:
-        st.info("💡 새로운 평가를 원하시면 관리자에게 문의하세요.")
+        st.markdown('<p style="color: #333333; background: #f8f9fa; padding: 1rem; border-radius: 8px; border-left: 4px solid #1a73e8;">💡 새로운 평가를 원하시면 관리자에게 문의하세요.</p>', unsafe_allow_html=True)
