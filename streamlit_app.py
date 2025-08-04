@@ -432,7 +432,7 @@ col1, col2 = st.columns([4, 1])
 with col1:
     model_input = st.text_input(
         "Model ID",
-        placeholder="예: Qwen/Qwen3-30B",
+        placeholder="예: Qwen/Qwen3-7B-Instruct",
         label_visibility="collapsed"
     )
 with col2:
@@ -461,8 +461,7 @@ if st.session_state.pending_evaluations:
 st.markdown("---")
 
 # --- 벤치마크 결과 ---
-# st.subheader("📊 Current Benchmark Rankings")
-st.markdown('<h3 style="color: #333333; font-weight: 600; margin: 2rem 0 1rem 0;">📊 Current Benchmark Rankings</h3>', unsafe_allow_html=True)
+st.subheader("📊 Current Benchmark Rankings")
 
 sorted_results = sorted(st.session_state.benchmark_results, key=lambda x: x['accuracy'], reverse=True)
 
@@ -508,8 +507,7 @@ for i, result in enumerate(sorted_results):
 # --- 관리자 기능 ---
 if st.session_state.admin_mode and st.session_state.admin_authenticated:
     st.markdown("---")
-    # st.subheader("🔧 Admin Panel")
-    st.markdown('<h3 style="color: #333333; font-weight: 600; margin: 2rem 0 1rem 0;">🔧 Admin Panel</h3>', unsafe_allow_html=True)
+    st.subheader("🔧 Admin Panel")
     
     # 테스트 데이터셋 관리
     if st.session_state.test_dataset:
